@@ -1,4 +1,4 @@
 #[derive(Debug)]
-pub struct Bond {
+pub struct FixedRateBond {
     pub ytm: i64,
 }

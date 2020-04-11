@@ -1,9 +1,12 @@
-pub mod bonds;
+//! Library to used for quantitative finance.
+#![allow(dead_code)]
+#![deny(//missing_docs,
+        unsafe_code,
+        unused_import_braces,
+        unused_qualifications)]
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+pub mod cashflows;
+pub mod daycounters;
+pub mod instruments;
+pub mod termstructures;
+pub mod time;
