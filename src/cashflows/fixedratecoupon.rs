@@ -11,8 +11,23 @@ impl Coupon for FixedRateCoupon {
     fn rate(&self) -> f64 {
         self.interest_rate.rate
     }
-    fn accrued_amount(&self, _date: Date) -> f64 {
-        0.0
+    fn accrued_amount(&self, date: Date) -> f64 {
+        if date.d.le(&self.fields.accrual_start_date.d) || date.d.gt(&self.fields.payment_date.d) {
+            0.0
+        } else {
+            let min_date = if date.d.le(&self.fields.accrual_end_date.d) {
+                date
+            } else {
+                self.fields.accrual_end_date
+            };
+            self.fields.nominal
+                * (self.interest_rate.compound_factor_with_ref(
+                    self.fields.accrual_start_date,
+                    min_date,
+                    self.fields.reference_period_start,
+                    self.fields.reference_period_end,
+                ) - 1.0)
+        }
     }
     fn accrual_period(&self) -> f64 {
         self.fields.day_counter.year_fraction(
@@ -30,7 +45,13 @@ impl Coupon for FixedRateCoupon {
 }
 impl CashFlow for FixedRateCoupon {
     fn amount(&self) -> f64 {
-        0.0
+        self.fields.nominal
+            * (self.interest_rate.compound_factor_with_ref(
+                self.fields.accrual_start_date,
+                self.fields.accrual_end_date,
+                self.fields.reference_period_start,
+                self.fields.reference_period_end,
+            ) - 1.0)
     }
 }
 
