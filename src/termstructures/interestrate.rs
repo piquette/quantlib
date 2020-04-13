@@ -1,6 +1,6 @@
 use super::Compounding;
-use crate::daycounters::DayCounter;
 use crate::time::Date;
+use crate::time::DayCounter;
 
 pub struct InterestRate {
     pub rate: f64,

@@ -5,11 +5,20 @@ pub use crate::time::Date;
 pub struct Bond {
     pub settlement_days: i32,
     pub calendar: Calendar,
-    pub notional_schedule: Vec<Date>,
-    pub notionals: Vec<f64>,
     pub cashflows: Leg,
-    pub redemptions: Leg,
     pub maturity_date: Date,
     pub issue_date: Date,
-    pub settlement_value: f64,
+    // always computed
+    redemptions: Leg,
+    notional_schedule: Vec<Date>,
+    notionals: Vec<f64>,
+    // not set in constructor
+    settlement_value: f64,
 }
+// constructor has:
+// settlement days int
+// calendar
+// face amt double
+// maturity date
+// issue date
+// cash flows leg

@@ -1,13 +1,13 @@
-// use quantlib::bonds::Bond;
+use quantlib::instruments::FixedRateBond;
 
-// fn main() {
-//     // ZC
-//     // Fixed
-//     // Floating
+fn main() {
+    // ZC
+    // Fixed
+    // Floating
 
-//     //
-//     //
-//     let b = Bond { ytm: 40 };
+    //
+    //
+    // let b = FixedRateBond { ytm: 40 };
 
-//     println!("b: {:?}", b);
-// }
+    // println!("b: {:?}", b);
+}

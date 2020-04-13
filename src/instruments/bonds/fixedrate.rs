@@ -1,4 +1,8 @@
-#[derive(Debug)]
+use super::super::bond::Bond;
+use crate::time::{Calendar, Frequency};
+
 pub struct FixedRateBond {
-    pub ytm: i64,
+    pub bond: Bond,
+    pub frequency: Frequency,
+    pub calendar: Calendar,
 }

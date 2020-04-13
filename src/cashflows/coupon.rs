@@ -1,6 +1,6 @@
 use super::CashFlow;
-use crate::daycounters::DayCounter;
 use crate::time::Date;
+use crate::time::DayCounter;
 
 pub trait Coupon: CashFlow {
     fn rate(&self) -> f64;
