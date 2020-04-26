@@ -3,7 +3,7 @@ pub use crate::time::Calendar;
 pub use crate::time::Date;
 
 pub struct Bond {
-    pub settlement_days: i32,
+    pub settlement_days: usize,
     pub calendar: Calendar,
     pub cashflows: Leg,
     pub maturity_date: Date,

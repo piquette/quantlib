@@ -37,7 +37,7 @@ impl Coupon for FixedRateCoupon {
             self.fields.reference_period_end,
         )
     }
-    fn accrual_days(&self) -> i64 {
+    fn accrual_days(&self) -> usize {
         self.fields
             .day_counter
             .day_count(self.fields.accrual_start_date, self.fields.accrual_end_date)

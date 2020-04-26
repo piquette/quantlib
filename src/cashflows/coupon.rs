@@ -6,7 +6,7 @@ pub trait Coupon: CashFlow {
     fn rate(&self) -> f64;
     fn accrued_amount(&self, _date: Date) -> f64;
     fn accrual_period(&self) -> f64;
-    fn accrual_days(&self) -> i64;
+    fn accrual_days(&self) -> usize;
 }
 
 pub struct CouponFields {

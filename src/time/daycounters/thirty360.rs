@@ -49,7 +49,7 @@ impl DayCounter for Thirty360 {
     //
     //
     //
-    fn day_count(&self, date_start: Date, date_end: Date) -> i64 {
+    fn day_count(&self, date_start: Date, date_end: Date) -> usize {
         let mut dm1 = date_start.day_of_month();
         let mut dm2 = date_end.day_of_month();
         let m1 = date_start.month();
@@ -67,17 +67,17 @@ impl DayCounter for Thirty360 {
                 }
 
                 (360 * (y2 - y1)
-                    + 30_i32 * (m2 as i32 - m1 as i32 - 1)
-                    + cmp::max(0, 30 - dm1) as i32
-                    + cmp::min(30, dm2) as i32) as i64
+                    + 30_usize * (m2 as usize - m1 as usize - 1)
+                    + cmp::max(0, 30 - dm1) as usize
+                    + cmp::min(30, dm2) as usize) as usize
             }
             // European and euro bonds.
             // =====================
             Convention360::European | Convention360::EurobondBasis => {
                 (360 * (y2 - y1)
-                    + 30 * (m2 as i32 - m1 as i32 - 1)
-                    + cmp::max(0, 30 - dm1) as i32
-                    + cmp::min(30, dm2) as i32) as i64
+                    + 30 * (m2 as usize - m1 as usize - 1)
+                    + cmp::max(0, 30 - dm1) as usize
+                    + cmp::min(30, dm2) as usize) as usize
             }
             // Italian bonds.
             // =====================
@@ -91,9 +91,9 @@ impl DayCounter for Thirty360 {
                 }
 
                 (360 * (y2 - y1)
-                    + 30 * (m2 as i32 - m1 as i32 - 1)
-                    + cmp::max(0, 30 - dm1) as i32
-                    + cmp::min(30, dm2) as i32) as i64
+                    + 30 * (m2 as usize - m1 as usize - 1)
+                    + cmp::max(0, 30 - dm1) as usize
+                    + cmp::min(30, dm2) as usize) as usize
             }
         }
     }

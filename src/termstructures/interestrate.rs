@@ -7,7 +7,7 @@ pub struct InterestRate {
     pub day_counter: Box<dyn DayCounter>,
     pub compounding: Compounding,
     pub freq_makes_sense: bool,
-    pub freq: i32,
+    pub freq: usize,
 }
 
 impl InterestRate {

@@ -17,7 +17,7 @@ pub struct Actual365Fixed;
 impl DayCounter for Actual365Fixed {
     //
     //
-    fn day_count(&self, date_start: Date, date_end: Date) -> i64 {
+    fn day_count(&self, date_start: Date, date_end: Date) -> usize {
         day_count(date_start, date_end)
     }
 

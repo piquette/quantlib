@@ -12,8 +12,8 @@ impl Default for Date {
         Date { d: Utc::today() }
     }
 }
-const MONTH_LENGTHS: [i32; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-const MONTH_LEAP_LENGTHS: [i32; 12] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const MONTH_LENGTHS: [usize; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const MONTH_LEAP_LENGTHS: [usize; 12] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const YEAR_IS_LEAP: [bool; 301] = [
     // 1900 is leap in agreement with Excel's bug
     // 1900 is out of valid date range anyway
@@ -52,21 +52,21 @@ const YEAR_IS_LEAP: [bool; 301] = [
 ];
 
 impl Date {
-    pub fn sub(&self, date: Date) -> i64 {
-        self.d.signed_duration_since(date.d).num_days()
+    pub fn sub(&self, date: Date) -> usize {
+        self.d.signed_duration_since(date.d).num_days() as usize
     }
-    pub fn day_of_month_zeroed(&self) -> u32 {
-        self.d.day() - 1
+    pub fn day_of_month_zeroed(&self) -> usize {
+        (self.d.day() - 1) as usize
     }
-    pub fn day_of_month(&self) -> u32 {
-        self.d.day()
+    pub fn day_of_month(&self) -> usize {
+        self.d.day() as usize
     }
-    pub fn month(&self) -> i8 {
-        self.d.month() as i8
+    pub fn month(&self) -> usize {
+        self.d.month() as usize
     }
 
-    pub fn year(&self) -> i32 {
-        self.d.year()
+    pub fn year(&self) -> usize {
+        self.d.year() as usize
     }
 
     pub fn is_end_of_month(date: Date) -> bool {
@@ -77,15 +77,15 @@ impl Date {
         day == Date::month_length(month, Date::is_leap(date.year()))
     }
 
-    pub fn is_leap(year: i32) -> bool {
+    pub fn is_leap(year: usize) -> bool {
         YEAR_IS_LEAP[(year - 1900) as usize]
     }
 
-    fn month_length(month: i8, is_leap_year: bool) -> u32 {
+    fn month_length(month: usize, is_leap_year: bool) -> usize {
         if is_leap_year {
-            MONTH_LEAP_LENGTHS[(month - 1) as usize] as u32
+            MONTH_LEAP_LENGTHS[(month - 1) as usize]
         } else {
-            MONTH_LENGTHS[(month - 1) as usize] as u32
+            MONTH_LENGTHS[(month - 1) as usize]
         }
     }
 }

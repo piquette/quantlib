@@ -1,11 +1,11 @@
 use crate::time::Date;
 
-pub fn day_count(date_start: Date, date_end: Date) -> i64 {
+pub fn day_count(date_start: Date, date_end: Date) -> usize {
     date_end.sub(date_start)
 }
 
 pub trait DayCounter {
-    fn day_count(&self, date_start: Date, date_end: Date) -> i64;
+    fn day_count(&self, date_start: Date, date_end: Date) -> usize;
     fn year_fraction(
         &self,
         date_start: Date,
@@ -17,7 +17,7 @@ pub trait DayCounter {
 
 pub struct SimpleDayCounter;
 impl DayCounter for SimpleDayCounter {
-    fn day_count(&self, date_start: Date, date_end: Date) -> i64 {
+    fn day_count(&self, date_start: Date, date_end: Date) -> usize {
         //
         // Supposed to implement whatever Thirty360 implements.
         //
@@ -41,7 +41,7 @@ impl DayCounter for SimpleDayCounter {
             || dm1 > dm2 && Date::is_end_of_month(date_end)
             || dm1 < dm2 && Date::is_end_of_month(date_start)
         {
-            ((y2 - y1) + (m2 - m1) as i32) as f64 / 12.0
+            ((y2 - y1) + (m2 - m1) as usize) as f64 / 12.0
         } else {
             // fallback to Thirty360
             0.0

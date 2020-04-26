@@ -51,7 +51,7 @@ impl Calendar {
             include_end_of_month,
         )
     }
-    pub fn advance_by_units(&self, date: Date, n: i32, time_unit: TimeUnit) -> Date {
+    pub fn advance_by_units(&self, date: Date, n: usize, time_unit: TimeUnit) -> Date {
         self.advance(date, n, time_unit, BusinessDayConvention::Following, false)
     }
     pub fn advance_by_period(&self, date: Date, period: Period) -> Date {
@@ -67,7 +67,7 @@ impl Calendar {
     pub fn advance(
         &self,
         _date: Date,
-        _n: i32,
+        _n: usize,
         _time_unit: TimeUnit,
         _convention: BusinessDayConvention,
         _include_end_of_month: bool,
@@ -75,7 +75,7 @@ impl Calendar {
         Date::default()
     }
 
-    pub fn business_days_between(&self, from: Date, to: Date) -> i32 {
+    pub fn business_days_between(&self, from: Date, to: Date) -> usize {
         self.business_days_between_include(from, to, true, false)
     }
     pub fn business_days_between_include(
@@ -84,7 +84,7 @@ impl Calendar {
         _to: Date,
         _include_first: bool,
         _include_last: bool,
-    ) -> i32 {
+    ) -> usize {
         0
     }
 }

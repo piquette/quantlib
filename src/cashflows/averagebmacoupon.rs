@@ -1,3 +1,3 @@
 pub struct AverageBMACoupon {
-    pub cool: i64,
+    pub cool: usize,
 }
