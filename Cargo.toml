@@ -4,12 +4,13 @@ version = "0.1.0"
 authors = ["ackleymi <ackleymi@gmail.com>"]
 keywords = ["finance", "quantitative"]
 description = "The quantitative finance libary for rust."
-homepage = "https://github.com/piquette"
-repository = "https://github.com/piquette"
+homepage = "https://github.com/piquette/quantlib"
+repository = "https://github.com/piquette/quantlib"
 documentation = "https://docs.rs/quantlib"
 license = "MIT"
 readme = "README.md"
 edition = "2018"
+exclude = ["docs/**/*", "media/**/*"]
 
 [dependencies]
 chrono = "0.4.11"
