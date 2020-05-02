@@ -1,3 +1,3 @@
-pub mod pricingengine;
+pub mod traits;
 
-pub use self::pricingengine::PricingEngine;
+pub use self::traits::PricingEngine;

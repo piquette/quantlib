@@ -1,4 +1,4 @@
-use super::DayCounter;
+use crate::time::traits::*;
 use crate::time::Date;
 use std::cmp;
 
@@ -52,8 +52,8 @@ impl DayCounter for Thirty360 {
     fn day_count(&self, date_start: Date, date_end: Date) -> usize {
         let mut dm1 = date_start.day_of_month();
         let mut dm2 = date_end.day_of_month();
-        let m1 = date_start.month();
-        let mut m2 = date_end.month();
+        let m1 = date_start.month() as usize;
+        let mut m2 = date_end.month() as usize;
         let y1 = date_start.year();
         let y2 = date_end.year();
 

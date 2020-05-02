@@ -1,4 +1,5 @@
-use super::{day_count, DayCounter};
+use super::day_count;
+use crate::time::traits::*;
 use crate::time::Date;
 use std::cmp;
 

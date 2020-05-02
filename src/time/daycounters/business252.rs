@@ -1,4 +1,4 @@
-use super::DayCounter;
+use crate::time::traits::*;
 use crate::time::{Calendar, Date};
 
 pub struct Business252 {

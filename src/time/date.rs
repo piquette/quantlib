@@ -1,3 +1,5 @@
+use super::month::Month;
+use super::weekday::Weekday;
 use chrono::prelude::*;
 use chrono::Date as ChronDate;
 //use chrono::TimeZone as ChronZone;
@@ -61,12 +63,19 @@ impl Date {
     pub fn day_of_month(&self) -> usize {
         self.d.day() as usize
     }
-    pub fn month(&self) -> usize {
-        self.d.month() as usize
+    pub fn month(&self) -> Month {
+        Month::from_int(self.d.month()).unwrap()
     }
 
     pub fn year(&self) -> usize {
         self.d.year() as usize
+    }
+    pub fn day_of_year(&self) -> usize {
+        self.d.ordinal() as usize
+    }
+
+    pub fn weekday(&self) -> Weekday {
+        Weekday::from_int(self.d.weekday().number_from_sunday()).unwrap()
     }
 
     pub fn is_end_of_month(date: Date) -> bool {
@@ -74,7 +83,7 @@ impl Date {
         let day = date.day_of_month();
         let month = date.month();
 
-        day == Date::month_length(month, Date::is_leap(date.year()))
+        day == Date::month_length(month as usize, Date::is_leap(date.year()))
     }
 
     pub fn is_leap(year: usize) -> bool {
