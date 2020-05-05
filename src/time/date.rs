@@ -54,8 +54,13 @@ const YEAR_IS_LEAP: [bool; 301] = [
 ];
 
 impl Date {
-    pub fn sub(&self, date: Date) -> usize {
-        self.d.signed_duration_since(date.d).num_days() as usize
+    pub fn new(day: u32, month: Month, year: i32) -> Date {
+        Date {
+            d: Utc.ymd(year, month as u32, day),
+        }
+    }
+    pub fn sub(&self, date: Date) -> i64 {
+        self.d.signed_duration_since(date.d).num_days()
     }
     pub fn day_of_month_zeroed(&self) -> usize {
         (self.d.day() - 1) as usize

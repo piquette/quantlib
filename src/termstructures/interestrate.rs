@@ -1,13 +1,12 @@
 use super::Compounding;
-use crate::time::Date;
-use crate::time::DayCounter;
-
+use crate::definitions::{Rate, Time};
+use crate::time::{Date, DayCounter, Frequency};
 pub struct InterestRate {
-    pub rate: f64,
+    pub rate: Rate,
     pub day_counter: Box<dyn DayCounter>,
     pub compounding: Compounding,
     pub freq_makes_sense: bool,
-    pub freq: usize,
+    pub freq: f64,
 }
 
 impl InterestRate {
@@ -22,11 +21,13 @@ impl InterestRate {
         ref_start: Date,
         ref_end: Date,
     ) -> f64 {
-        let t = self.day_counter.year_fraction(d1, d2, ref_start, ref_end);
+        let t = self
+            .day_counter
+            .year_fraction(d1, d2, Some(ref_start), Some(ref_end));
         self.compound_factor_with_time(t)
     }
 
-    fn compound_factor_with_time(&self, t: f64) -> f64 {
+    fn compound_factor_with_time(&self, t: Time) -> f64 {
         assert!(t >= 0.0);
         match self.compounding {
             Compounding::Simple => {

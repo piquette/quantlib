@@ -11,7 +11,7 @@ pub struct Actual360;
 impl DayCounter for Actual360 {
     //
     //
-    fn day_count(&self, date_start: Date, date_end: Date) -> usize {
+    fn day_count(&self, date_start: Date, date_end: Date) -> i64 {
         day_count(date_start, date_end)
     }
 
@@ -21,8 +21,8 @@ impl DayCounter for Actual360 {
         &self,
         date_start: Date,
         date_end: Date,
-        _ref_period_start: Date,
-        _ref_period_end: Date,
+        _ref_period_start: Option<Date>,
+        _ref_period_end: Option<Date>,
     ) -> f64 {
         self.day_count(date_start, date_end) as f64 / 360.0
     }

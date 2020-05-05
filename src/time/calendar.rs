@@ -77,7 +77,7 @@ impl Calendar {
         Date::default()
     }
 
-    pub fn business_days_between(&self, from: Date, to: Date) -> usize {
+    pub fn business_days_between(&self, from: Date, to: Date) -> i64 {
         self.business_days_between_include(from, to, true, false)
     }
     pub fn business_days_between_include(
@@ -86,7 +86,7 @@ impl Calendar {
         _to: Date,
         _include_first: bool,
         _include_last: bool,
-    ) -> usize {
+    ) -> i64 {
         0
     }
 

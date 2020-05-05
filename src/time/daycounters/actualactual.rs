@@ -1,7 +1,6 @@
 use super::day_count;
 use crate::time::traits::*;
 use crate::time::Date;
-use std::cmp;
 
 pub enum ConventionActual {
     ISMA,
@@ -36,7 +35,7 @@ impl DayCounter for ActualActual {
     //
     //
     //
-    fn day_count(&self, date_start: Date, date_end: Date) -> usize {
+    fn day_count(&self, date_start: Date, date_end: Date) -> i64 {
         day_count(date_start, date_end)
     }
 
@@ -48,8 +47,8 @@ impl DayCounter for ActualActual {
         &self,
         date_start: Date,
         date_end: Date,
-        _ref_period_start: Date,
-        _ref_period_end: Date,
+        _ref_period_start: Option<Date>,
+        _ref_period_end: Option<Date>,
     ) -> f64 {
         let mut dm1 = date_start.day_of_month();
         let mut dm2 = date_end.day_of_month();

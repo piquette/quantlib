@@ -12,8 +12,8 @@ pub struct Business252 {
 impl DayCounter for Business252 {
     //
     //
-    fn day_count(&self, date_start: Date, date_end: Date) -> usize {
-        self.calendar.business_days_between(date_start, date_end) as usize
+    fn day_count(&self, date_start: Date, date_end: Date) -> i64 {
+        self.calendar.business_days_between(date_start, date_end)
     }
 
     //
@@ -22,8 +22,8 @@ impl DayCounter for Business252 {
         &self,
         date_start: Date,
         date_end: Date,
-        _ref_period_start: Date,
-        _ref_period_end: Date,
+        _ref_period_start: Option<Date>,
+        _ref_period_end: Option<Date>,
     ) -> f64 {
         self.day_count(date_start, date_end) as f64 / 252.0
     }

@@ -49,7 +49,7 @@ impl DayCounter for Thirty360 {
     //
     //
     //
-    fn day_count(&self, date_start: Date, date_end: Date) -> usize {
+    fn day_count(&self, date_start: Date, date_end: Date) -> i64 {
         let mut dm1 = date_start.day_of_month();
         let mut dm2 = date_end.day_of_month();
         let m1 = date_start.month() as usize;
@@ -67,9 +67,9 @@ impl DayCounter for Thirty360 {
                 }
 
                 (360 * (y2 - y1)
-                    + 30_usize * (m2 as usize - m1 as usize - 1)
+                    + 30 * (m2 as usize - m1 as usize - 1)
                     + cmp::max(0, 30 - dm1) as usize
-                    + cmp::min(30, dm2) as usize) as usize
+                    + cmp::min(30, dm2) as usize) as i64
             }
             // European and euro bonds.
             // =====================
@@ -77,7 +77,7 @@ impl DayCounter for Thirty360 {
                 (360 * (y2 - y1)
                     + 30 * (m2 as usize - m1 as usize - 1)
                     + cmp::max(0, 30 - dm1) as usize
-                    + cmp::min(30, dm2) as usize) as usize
+                    + cmp::min(30, dm2) as usize) as i64
             }
             // Italian bonds.
             // =====================
@@ -93,7 +93,7 @@ impl DayCounter for Thirty360 {
                 (360 * (y2 - y1)
                     + 30 * (m2 as usize - m1 as usize - 1)
                     + cmp::max(0, 30 - dm1) as usize
-                    + cmp::min(30, dm2) as usize) as usize
+                    + cmp::min(30, dm2) as usize) as i64
             }
         }
     }
@@ -106,8 +106,8 @@ impl DayCounter for Thirty360 {
         &self,
         date_start: Date,
         date_end: Date,
-        _ref_period_start: Date,
-        _ref_period_end: Date,
+        _ref_period_start: Option<Date>,
+        _ref_period_end: Option<Date>,
     ) -> f64 {
         self.day_count(date_start, date_end) as f64 / 360.0
     }
