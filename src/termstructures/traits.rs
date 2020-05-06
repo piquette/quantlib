@@ -75,16 +75,6 @@ pub trait YieldTermStructure: TermStructure {
         extrapolate: bool,
     ) -> InterestRate;
 
-    fn forward_rate_with_period(
-        &self,
-        d: Date,
-        p: Period,
-        result_day_counter: Box<dyn DayCounter>,
-        comp: Compounding,
-        freq: Frequency,
-        extrapolate: bool,
-    ) -> InterestRate;
-
     fn forward_rate_with_time(
         &self,
         t1: Time,

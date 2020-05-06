@@ -4,7 +4,7 @@ use chrono::prelude::*;
 use chrono::Date as ChronDate;
 //use chrono::TimeZone as ChronZone;
 
-#[derive(PartialEq, Copy, Debug, Clone)]
+#[derive(PartialEq, Copy, Debug, Clone, PartialOrd)]
 pub struct Date {
     pub d: ChronDate<Utc>,
 }

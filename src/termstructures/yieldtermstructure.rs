@@ -1,12 +1,14 @@
 use super::base::Base;
+use super::compounding::Compounding;
 use super::interestrate::InterestRate;
 use super::traits::TermStructure;
 use super::traits::YieldTermStructure as YTS;
 use crate::definitions::{DiscountFactor, Time};
 use crate::quotes::Quote;
-use crate::time::{Calendar, Date, DayCounter, Month};
+use crate::time::{Calendar, Date, DayCounter, Frequency, Month, Period};
 
 type DiscountImpl = Box<dyn Fn(Time) -> DiscountFactor>;
+const dt: Time = 0.0001;
 
 pub struct YieldTermStructure {
     base: Base,
@@ -130,7 +132,29 @@ impl YTS for YieldTermStructure {
         comp: Compounding,
         freq: Frequency,
         extrapolate: bool,
-    ) -> InterestRate;
+    ) -> InterestRate {
+        if date == self.reference_date() {
+            let compound = 1.0 / self.discount_with_time(dt, extrapolate);
+            return InterestRate::implied_rate_with_time(
+                compound,
+                result_day_counter,
+                comp,
+                freq,
+                dt,
+            );
+        }
+        let compound = 1.0 / self.discount(date, extrapolate);
+        InterestRate::implied_rate(
+            compound,
+            result_day_counter,
+            comp,
+            freq,
+            self.reference_date(),
+            date,
+            None,
+            None,
+        )
+    }
     ///
     fn zero_rate_with_time(
         &self,
@@ -138,7 +162,19 @@ impl YTS for YieldTermStructure {
         comp: Compounding,
         freq: Frequency,
         extrapolate: bool,
-    ) -> InterestRate;
+    ) -> InterestRate {
+        if time == 0.0 {
+            time = dt;
+        }
+        let compound = 1.0 / self.discount_with_time(dt, extrapolate);
+        return InterestRate::implied_rate_with_time(
+            compound,
+            self.day_counter(),
+            comp,
+            freq,
+            time,
+        );
+    }
 
     /// These methods returns the forward interest rate between two dates or times.
     /// In the latter case, times are calculated as fractions of year from the
@@ -152,17 +188,29 @@ impl YTS for YieldTermStructure {
         comp: Compounding,
         freq: Frequency,
         extrapolate: bool,
-    ) -> InterestRate;
+    ) -> InterestRate {
+        if d1 == d2 {
+            self.base
+                .check_range(d1, self.reference_date(), self.max_date(), extrapolate);
 
-    fn forward_rate_with_period(
-        &self,
-        d: Date,
-        p: Period,
-        result_day_counter: Box<dyn DayCounter>,
-        comp: Compounding,
-        freq: Frequency,
-        extrapolate: bool,
-    ) -> InterestRate;
+            let t1 = ((self.time_from_reference(d1) - dt / 2.0) as f64).max(0.0);
+            let t2 = t1 + dt;
+
+            let compound = self.discount_with_time(t1, true) / self.discount_with_time(t2, true);
+            // times have been calculated with a possibly different daycounter
+            // but the difference should not matter for very small times
+            return InterestRate::implied_rate_with_time(
+                compound,
+                result_day_counter,
+                comp,
+                freq,
+                dt,
+            );
+        }
+        assert!(d1 < d2);
+        let compound = self.discount(d1, extrapolate) / self.discount(d2, extrapolate);
+        InterestRate::implied_rate(compound, result_day_counter, comp, freq, d1, d2, None, None)
+    }
 
     fn forward_rate_with_time(
         &self,
@@ -172,7 +220,22 @@ impl YTS for YieldTermStructure {
         comp: Compounding,
         freq: Frequency,
         extrapolate: bool,
-    ) -> InterestRate;
+    ) -> InterestRate {
+        let compound: f64;
+        if t2 == t1 {
+            self.base
+                .check_range_with_time(t1, self.max_time(), extrapolate);
+            t1 = (t1 - dt / 2.0).max(0.0);
+            t2 = t1 + dt;
+            compound = self.discount_with_time(t1, true) / self.discount_with_time(t2, true);
+        } else {
+            // QL_REQUIRE(t2 > t1, "t2 (" << t2 << ") < t1 (" << t2 << ")");
+            compound =
+                self.discount_with_time(t1, extrapolate) / self.discount_with_time(t2, extrapolate);
+        }
+
+        InterestRate::implied_rate_with_time(compound, self.day_counter(), comp, freq, t2 - t1)
+    }
 }
 
 impl TermStructure for YieldTermStructure {

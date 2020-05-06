@@ -30,8 +30,8 @@ impl Default for Base {
 
 impl Base {
     pub fn check_range(&self, d: Date, ref_date: Date, max: Date, extrapolate: bool) {
-        // assert!(d >= ref_date);
-        // assert!(t <= max);
+        assert!(d >= ref_date);
+        assert!(d <= max);
     }
     pub fn check_range_with_time(&self, t: Time, max: Time, extrapolate: bool) {
         assert!(t >= 0.0);
