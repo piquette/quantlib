@@ -2,6 +2,7 @@ use super::day_count;
 use crate::time::traits::*;
 use crate::time::Date;
 
+#[derive(Copy, Clone)]
 pub enum ConventionActual {
     ISMA,
     Bond,
@@ -17,6 +18,7 @@ pub enum ConventionActual {
 //
 // http://en.wikipedia.org/wiki/Day_count_convention
 //
+#[derive(Copy, Clone)]
 pub struct ActualActual {
     pub convention: ConventionActual,
 }

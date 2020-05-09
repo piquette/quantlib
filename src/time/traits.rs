@@ -2,7 +2,7 @@ use super::date::Date;
 use super::weekday::Weekday;
 use crate::definitions::Time;
 
-pub trait DayCounter {
+pub trait DayCounter: Copy {
     fn day_count(&self, date_start: Date, date_end: Date) -> i64;
     fn year_fraction(
         &self,
@@ -13,7 +13,7 @@ pub trait DayCounter {
     ) -> Time;
 }
 
-pub trait Calendar {
+pub trait Calendar: Copy {
     fn name(&self) -> String;
     fn is_business_day(&self, date: Date) -> bool;
     fn is_weekend(&self, weekday: &Weekday) -> bool;

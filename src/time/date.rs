@@ -59,6 +59,12 @@ impl Date {
             d: Utc.ymd(year, month as u32, day),
         }
     }
+    pub fn max(&self, d: Date) -> Date {
+        if *self > d {
+            return *self;
+        }
+        d
+    }
     pub fn sub(&self, date: Date) -> i64 {
         self.d.signed_duration_since(date.d).num_days()
     }

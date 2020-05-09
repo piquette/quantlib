@@ -1,15 +1,17 @@
-use crate::time::traits::*;
+use crate::time::traits::Calendar as Cal;
+use crate::time::traits::DayCounter;
 use crate::time::{Calendar, Date};
 
-pub struct Business252 {
-    pub calendar: Calendar,
+#[derive(Copy, Clone)]
+pub struct Business252<C: Cal> {
+    pub calendar: Calendar<C>,
 }
 
 //
 // Business/252 day count convention.
 // http://en.wikipedia.org/wiki/Day_count_convention
 //
-impl DayCounter for Business252 {
+impl<C: Cal> DayCounter for Business252<C> {
     //
     //
     fn day_count(&self, date_start: Date, date_end: Date) -> i64 {

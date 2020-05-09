@@ -1,20 +1,17 @@
 use super::compounding::Compounding;
 use super::interestrate::InterestRate;
 use crate::definitions::{DiscountFactor, Time};
+use crate::time::traits::Calendar as Cal;
 use crate::time::Calendar;
 use crate::time::Date;
 use crate::time::DayCounter;
 use crate::time::Frequency;
-use crate::time::Period;
 /// `TermStructure` describes the behavior of a simple term structure.
 ///
 ///
 pub trait TermStructure {
     /// The latest date for which the curve can return values.
     fn max_date(&self) -> Date;
-
-    /// The calendar used for reference date calculation.
-    fn calendar(&self) -> Calendar;
 
     /// The settlement days used for reference date calculation.
     fn settlement_days(&self) -> i64;
@@ -23,17 +20,15 @@ pub trait TermStructure {
     /// the fraction of the year between the reference date and the date passed as parameter.
     fn time_from_reference(&self, date: Date) -> Time;
 
-    /// The day counter used for date/double conversion.
-    fn day_counter(&self) -> Box<dyn DayCounter>;
-
     /// The latest double for which the curve can return values.
     fn max_time(&self) -> Time;
 
     /// The date at which discount = 1.0 and/or variance = 0.0.
-    fn reference_date(&self) -> Date;
+    fn reference_date(&mut self) -> Date;
 }
 
 pub trait YieldTermStructure: TermStructure {
+    type D: DayCounter;
     /// Returns the discount factor for a given date or time. In the
     /// latter case, the double is calculated as a fraction of year from the
     /// reference date.
@@ -45,43 +40,43 @@ pub trait YieldTermStructure: TermStructure {
     /// In the latter case, the time is calculated as a fraction of year from the
     /// reference date.
     fn zero_rate(
-        &self,
+        &mut self,
         date: Date,
-        result_day_counter: Box<dyn DayCounter>,
+        result_day_counter: Self::D,
         comp: Compounding,
         freq: Frequency,
         extrapolate: bool,
-    ) -> InterestRate;
+    ) -> InterestRate<Self::D>;
     ///
     fn zero_rate_with_time(
-        &self,
+        &mut self,
         time: Time,
         comp: Compounding,
         freq: Frequency,
         extrapolate: bool,
-    ) -> InterestRate;
+    ) -> InterestRate<Self::D>;
 
     /// These methods returns the forward interest rate between two dates or times.
     /// In the latter case, times are calculated as fractions of year from the
     /// reference date.
     /// If both dates (times) are equal the instantaneous forward rate is returned.
     fn forward_rate(
-        &self,
+        &mut self,
         d1: Date,
         d2: Date,
-        result_day_counter: Box<dyn DayCounter>,
+        result_day_counter: Self::D,
         comp: Compounding,
         freq: Frequency,
         extrapolate: bool,
-    ) -> InterestRate;
+    ) -> InterestRate<Self::D>;
 
     fn forward_rate_with_time(
-        &self,
+        &mut self,
         t1: Time,
         t2: Time,
-        result_day_counter: Box<dyn DayCounter>,
+        result_day_counter: Self::D,
         comp: Compounding,
         freq: Frequency,
         extrapolate: bool,
-    ) -> InterestRate;
+    ) -> InterestRate<Self::D>;
 }

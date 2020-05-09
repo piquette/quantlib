@@ -1,34 +1,50 @@
 use super::traits::TermStructure;
 use crate::definitions::Time;
+use crate::time::traits::Calendar as Cal;
+use crate::time::Actual365Fixed;
 use crate::time::Calendar;
 use crate::time::Date;
 use crate::time::DayCounter;
 use crate::time::TimeUnit;
 
-// #[derive(Default)]
-pub struct Base {
+pub struct Base<C: Cal, DC = Actual365Fixed> {
     pub settlement_days: i64,
-    pub day_counter: Box<dyn DayCounter>,
+    pub day_counter: DC,
     pub moving: bool,
     pub updated: bool,
-    pub calendar: Option<Calendar>,
+    pub calendar: Option<Calendar<C>>,
     pub reference_date: Option<Date>,
 }
 
-impl Default for Base {
-    fn default() -> Base {
+//impl<DC: DayCounter> Default for Base<DC> {}
+
+impl<C, DC> Base<C, DC>
+where
+    C: Cal,
+    DC: DayCounter,
+{
+    pub fn default() -> Base<C, Actual365Fixed> {
         Base {
             moving: false,
             updated: true,
             settlement_days: 0,
-            day_counter: Box::new(crate::time::Actual365Fixed),
+            day_counter: Actual365Fixed {},
             calendar: None,
             reference_date: None,
         }
     }
-}
 
-impl Base {
+    pub fn new(day_counter: DC) -> Base<C, DC> {
+        Base {
+            moving: false,
+            updated: true,
+            settlement_days: 0,
+            day_counter: day_counter,
+            calendar: None,
+            reference_date: None,
+        }
+    }
+
     pub fn check_range(&self, d: Date, ref_date: Date, max: Date, extrapolate: bool) {
         assert!(d >= ref_date);
         assert!(d <= max);
@@ -39,15 +55,10 @@ impl Base {
     }
 }
 
-impl TermStructure for Base {
+impl<C: Cal, DC: DayCounter> TermStructure for Base<C, DC> {
     /// The latest date for which the curve can return values.
     fn max_date(&self) -> Date {
         Date::default()
-    }
-
-    /// The calendar used for reference date calculation.
-    fn calendar(&self) -> Calendar {
-        self.calendar.unwrap()
     }
 
     /// The settlement days used for reference date calculation.
@@ -62,20 +73,15 @@ impl TermStructure for Base {
             .year_fraction(self.reference_date.unwrap(), date, None, None)
     }
 
-    /// The day counter used for date/double conversion.
-    fn day_counter(&self) -> Box<dyn DayCounter> {
-        self.day_counter
-    }
-
     /// The latest double for which the curve can return values.
     fn max_time(&self) -> Time {
         self.time_from_reference(self.max_date())
     }
 
     /// The date at which discount = 1.0 and/or variance = 0.0.
-    fn reference_date(&self) -> Date {
+    fn reference_date(&mut self) -> Date {
         if !self.updated {
-            self.reference_date = Some(self.calendar().advance_by_units(
+            self.reference_date = Some(self.calendar.unwrap().advance_by_units(
                 Date::default(),
                 self.settlement_days as usize,
                 TimeUnit::Days,

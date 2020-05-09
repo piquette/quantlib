@@ -1,10 +1,12 @@
+use super::traits::Calendar as Cal;
 use super::{BusinessDayConvention, Date, Period, TimeUnit, Weekday};
 
-pub struct Calendar {
-    pub cal_impl: Box<dyn super::traits::Calendar>,
+#[derive(Copy, Clone)]
+pub struct Calendar<C: Cal> {
+    pub cal_impl: C,
 }
 
-impl Calendar {
+impl<C: Cal> Calendar<C> {
     pub fn is_business_day(&self, date: Date) -> bool {
         self.cal_impl.is_business_day(date)
     }
@@ -89,13 +91,13 @@ impl Calendar {
     ) -> i64 {
         0
     }
+}
 
-    pub fn easter_monday(year: usize) -> usize {
-        EASTER_MONDAYS[year - 1901]
-    }
-    pub fn easter_monday_ortho(year: usize) -> usize {
-        ORTHODOX_EASTER_MONDAYS[year - 1901]
-    }
+pub fn easter_monday(year: usize) -> usize {
+    EASTER_MONDAYS[year - 1901]
+}
+pub fn easter_monday_ortho(year: usize) -> usize {
+    ORTHODOX_EASTER_MONDAYS[year - 1901]
 }
 
 const EASTER_MONDAYS: [usize; 299] = [

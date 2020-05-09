@@ -2,21 +2,20 @@ use super::Compounding;
 use crate::definitions::{Rate, Time};
 use crate::time::{Actual365Fixed, Date, DayCounter, Frequency};
 
-pub struct InterestRate {
+#[derive(Copy, Clone)]
+pub struct InterestRate<DC: DayCounter> {
     pub rate: Rate,
-    pub day_counter: Box<dyn DayCounter>,
+    pub day_counter: DC,
     pub compounding: Compounding,
     pub freq_makes_sense: bool,
     pub freq: f64,
 }
-impl InterestRate {
-    fn new(
-        r: Rate,
-        day_counter: Box<dyn DayCounter>,
-        comp: Compounding,
-        freq: Frequency,
-    ) -> InterestRate {
-        let makes_sense = false;
+impl<DC> InterestRate<DC>
+where
+    DC: DayCounter,
+{
+    fn new(r: Rate, day_counter: DC, comp: Compounding, freq: Frequency) -> InterestRate<DC> {
+        let mut makes_sense = false;
         if comp == Compounding::Compounded
             || comp == Compounding::SimpleThenCompounded
             || comp == Compounding::CompoundedThenSimple
@@ -36,11 +35,11 @@ impl InterestRate {
 
     pub fn implied_rate_with_time(
         compound: f64,
-        day_counter: Box<dyn DayCounter>,
+        day_counter: DC,
         comp: Compounding,
         freq: Frequency,
         t: Time,
-    ) -> InterestRate {
+    ) -> InterestRate<DC> {
         // cant be less than zero.
         assert!(compound > 0.0);
         assert!(t > 0.0);
@@ -76,14 +75,14 @@ impl InterestRate {
 
     pub fn implied_rate(
         compound: f64,
-        day_counter: Box<dyn DayCounter>,
+        day_counter: DC,
         comp: Compounding,
         freq: Frequency,
         date_start: Date,
         date_end: Date,
         ref_period_start: Option<Date>,
         ref_period_end: Option<Date>,
-    ) -> InterestRate {
+    ) -> InterestRate<DC> {
         assert!(date_end >= date_start);
         let t = day_counter.year_fraction(date_start, date_end, ref_period_start, ref_period_end);
         Self::implied_rate_with_time(compound, day_counter, comp, freq, t)

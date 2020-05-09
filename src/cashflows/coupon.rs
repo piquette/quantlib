@@ -9,9 +9,10 @@ pub trait Coupon: CashFlow {
     fn accrual_days(&self) -> usize;
 }
 
-pub struct CouponFields {
+#[derive(Copy, Clone)]
+pub struct CouponFields<DC: DayCounter> {
     pub nominal: f64,
-    pub day_counter: Box<dyn DayCounter>,
+    pub day_counter: DC,
     pub payment_date: Date,
     pub accrual_start_date: Date,
     pub accrual_end_date: Date,

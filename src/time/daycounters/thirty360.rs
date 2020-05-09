@@ -2,6 +2,7 @@ use crate::time::traits::*;
 use crate::time::Date;
 use std::cmp;
 
+#[derive(Copy, Clone)]
 pub enum Convention360 {
     USA,
     BondBasis,
@@ -31,6 +32,8 @@ pub enum Convention360 {
 //
 // http://en.wikipedia.org/wiki/Day_count_convention
 //
+
+#[derive(Copy, Clone)]
 pub struct Thirty360 {
     pub convention: Convention360,
 }

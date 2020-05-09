@@ -1,13 +1,17 @@
 use super::{CashFlow, Coupon, CouponFields, Event};
 use crate::termstructures::InterestRate;
-use crate::time::Date;
+use crate::time::{Date, DayCounter};
 
-pub struct FixedRateCoupon {
-    pub fields: CouponFields,
-    pub interest_rate: InterestRate,
+#[derive(Copy, Clone)]
+pub struct FixedRateCoupon<DC: DayCounter> {
+    pub fields: CouponFields<DC>,
+    pub interest_rate: InterestRate<DC>,
 }
 
-impl Coupon for FixedRateCoupon {
+impl<DC> Coupon for FixedRateCoupon<DC>
+where
+    DC: DayCounter,
+{
     fn rate(&self) -> f64 {
         self.interest_rate.rate
     }
@@ -24,8 +28,8 @@ impl Coupon for FixedRateCoupon {
                 * (self.interest_rate.compound_factor_with_ref(
                     self.fields.accrual_start_date,
                     min_date,
-                    self.fields.reference_period_start,
-                    self.fields.reference_period_end,
+                    Some(self.fields.reference_period_start),
+                    Some(self.fields.reference_period_end),
                 ) - 1.0)
         }
     }
@@ -33,29 +37,36 @@ impl Coupon for FixedRateCoupon {
         self.fields.day_counter.year_fraction(
             self.fields.accrual_start_date,
             self.fields.accrual_end_date,
-            self.fields.reference_period_start,
-            self.fields.reference_period_end,
+            Some(self.fields.reference_period_start),
+            Some(self.fields.reference_period_end),
         )
     }
     fn accrual_days(&self) -> usize {
         self.fields
             .day_counter
             .day_count(self.fields.accrual_start_date, self.fields.accrual_end_date)
+            as usize
     }
 }
-impl CashFlow for FixedRateCoupon {
+impl<DC> CashFlow for FixedRateCoupon<DC>
+where
+    DC: DayCounter,
+{
     fn amount(&self) -> f64 {
         self.fields.nominal
             * (self.interest_rate.compound_factor_with_ref(
                 self.fields.accrual_start_date,
                 self.fields.accrual_end_date,
-                self.fields.reference_period_start,
-                self.fields.reference_period_end,
+                Some(self.fields.reference_period_start),
+                Some(self.fields.reference_period_end),
             ) - 1.0)
     }
 }
 
-impl Event for FixedRateCoupon {
+impl<DC> Event for FixedRateCoupon<DC>
+where
+    DC: DayCounter,
+{
     fn date(&self) -> Date {
         self.fields.payment_date
     }

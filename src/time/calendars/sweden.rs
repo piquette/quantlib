@@ -3,6 +3,7 @@ use crate::time::Date;
 use crate::weekday::Weekday;
 use crate::month::Month;
 
+#[derive(Copy, Clone)]
 pub struct Sweden;
 
 impl crate::time::traits::Calendar for Sweden {
@@ -16,7 +17,7 @@ impl crate::time::traits::Calendar for Sweden {
         let dd = date.day_of_year();
         let m = date.month();
         let y = date.year();
-        let em = Calendar::easter_monday(y);
+        let em = super::super::calendar::easter_monday(y);
         if self.is_weekend(&wkdy) 
          // Good Friday
 	                || (dd == em-3)

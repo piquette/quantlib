@@ -2,6 +2,7 @@ use super::day_count;
 use crate::time::traits::*;
 use crate::time::Date;
 
+#[derive(Copy, Clone)]
 pub struct Actual365Fixed;
 
 //

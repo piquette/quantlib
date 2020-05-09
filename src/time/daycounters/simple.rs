@@ -5,6 +5,7 @@ pub fn day_count(date_start: Date, date_end: Date) -> i64 {
     date_end.sub(date_start)
 }
 
+#[derive(Copy, Clone)]
 pub struct Simple;
 
 impl DayCounter for Simple {

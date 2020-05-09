@@ -5,14 +5,15 @@ use super::traits::TermStructure;
 use super::traits::YieldTermStructure as YTS;
 use crate::definitions::{DiscountFactor, Time};
 use crate::quotes::Quote;
-use crate::time::{Calendar, Date, DayCounter, Frequency, Month, Period};
+use crate::time::traits::Calendar as Cal;
+use crate::time::{Actual365Fixed, Calendar, Date, DayCounter, Frequency, Month};
 
 type DiscountImpl = Box<dyn Fn(Time) -> DiscountFactor>;
-const dt: Time = 0.0001;
+const DT: Time = 0.0001;
 
-pub struct YieldTermStructure {
-    base: Base,
-    jumps: Vec<Box<dyn Quote>>,
+pub struct YieldTermStructure<C: Cal, Q: Quote, DC = Actual365Fixed> {
+    base: Base<C, DC>,
+    jumps: Vec<Q>,
     jump_times: Vec<Time>,
     jump_dates: Vec<Date>,
     latest_reference: Option<Date>,
@@ -20,48 +21,57 @@ pub struct YieldTermStructure {
     discount_impl: Option<DiscountImpl>,
 }
 
-impl Default for YieldTermStructure {
-    fn default() -> YieldTermStructure {
-        YieldTermStructure {
-            base: Base::default(),
+// fn default() -> YieldTermStructure<Actual365Fixed, Q> {
+//     YieldTermStructure {
+//         base: Base::default(),
+//         jumps: vec![],
+//         jump_times: vec![],
+//         jump_dates: vec![],
+//         jumps_num: 0,
+//         latest_reference: None,
+//         discount_impl: None,
+//     }
+// }
+
+impl<C, Q, DC> YieldTermStructure<C, Q, DC>
+where
+    C: Cal,
+    Q: Quote,
+    DC: DayCounter,
+{
+    pub fn new(
+        calendar: Calendar<C>,
+        reference_date: Date,
+        day_counter: DC,
+        settlement_days: i64,
+        jumps: Vec<Q>,
+        jump_dates: Vec<Date>,
+        discount_impl: DiscountImpl,
+    ) -> YieldTermStructure<C, Q, DC> {
+        // Set fields.
+        let mut yt = YieldTermStructure {
+            base: Base::new(day_counter),
             jumps: vec![],
             jump_times: vec![],
             jump_dates: vec![],
             jumps_num: 0,
             latest_reference: None,
             discount_impl: None,
-        }
-    }
-}
-
-impl YieldTermStructure {
-    pub fn new(
-        &self,
-        calendar: Calendar,
-        reference_date: Date,
-        day_counter: Box<dyn DayCounter>,
-        settlement_days: i64,
-        jumps: Vec<Box<dyn Quote>>,
-        jump_dates: Vec<Date>,
-        discount_impl: DiscountImpl,
-    ) -> YieldTermStructure {
-        // Set fields.
-        let yt = Self::default();
+        };
         yt.base.calendar = Some(calendar);
         yt.base.reference_date = Some(reference_date);
-        yt.base.day_counter = day_counter;
         yt.base.settlement_days = settlement_days;
         yt.discount_impl = Some(discount_impl);
         // Set jumps
         yt.jumps = jumps;
         yt.jump_dates = jump_dates;
-        yt.jumps_num = jumps.len();
+        yt.jumps_num = yt.jumps.len();
         yt.set_jumps();
         yt
     }
 
     /// Set jumps.
-    fn set_jumps(&self) {
+    fn set_jumps(&mut self) {
         if self.jump_dates.is_empty() && !self.jumps.is_empty() {
             //
             self.jump_times.resize_with(self.jumps_num, || 0.0);
@@ -78,21 +88,27 @@ impl YieldTermStructure {
         self.latest_reference = Some(self.reference_date());
     }
 
-    pub fn set_calendar(&self, calendar: Calendar) {
+    pub fn set_calendar(&mut self, calendar: Calendar<C>) {
         self.base.calendar = Some(calendar)
     }
-    pub fn set_reference_date(&self, date: Date) {
+    pub fn set_reference_date(&mut self, date: Date) {
         self.base.reference_date = Some(date)
     }
-    pub fn set_day_counter(&self, day_counter: Box<dyn DayCounter>) {
+    pub fn set_day_counter(&mut self, day_counter: DC) {
         self.base.day_counter = day_counter
     }
-    pub fn set_settlement_days(&self, settlement_days: i64) {
+    pub fn set_settlement_days(&mut self, settlement_days: i64) {
         self.base.settlement_days = settlement_days;
     }
 }
 
-impl YTS for YieldTermStructure {
+impl<C, Q, DC> YTS for YieldTermStructure<C, Q, DC>
+where
+    C: Cal,
+    Q: Quote,
+    DC: DayCounter,
+{
+    type D = DC;
     /// Returns the discount factor for a given date or time. In the
     /// latter case, the double is calculated as a fraction of year from the
     /// reference date.
@@ -106,10 +122,10 @@ impl YTS for YieldTermStructure {
             .check_range_with_time(time, self.max_time(), extrapolate);
         //
         if self.jumps.is_empty() {
-            return self.discount_impl.unwrap()(time);
+            return self.discount_impl.as_ref().unwrap()(time);
         }
 
-        let jump_effect: DiscountFactor = 1.0;
+        let mut jump_effect: DiscountFactor = 1.0;
         for n in 0..=self.jumps_num {
             if self.jump_times[n] > 0.0 && self.jump_times[n] < time {
                 assert!(self.jumps[n].is_valid());
@@ -119,28 +135,28 @@ impl YTS for YieldTermStructure {
             }
         }
 
-        jump_effect * self.discount_impl.unwrap()(time)
+        jump_effect * self.discount_impl.as_ref().unwrap()(time)
     }
 
     /// These methods return the implied zero-yield rate for a given date or time.
     /// In the latter case, the time is calculated as a fraction of year from the
     /// reference date.
     fn zero_rate(
-        &self,
+        &mut self,
         date: Date,
-        result_day_counter: Box<dyn DayCounter>,
+        result_day_counter: DC,
         comp: Compounding,
         freq: Frequency,
         extrapolate: bool,
-    ) -> InterestRate {
+    ) -> InterestRate<DC> {
         if date == self.reference_date() {
-            let compound = 1.0 / self.discount_with_time(dt, extrapolate);
+            let compound = 1.0 / self.discount_with_time(DT, extrapolate);
             return InterestRate::implied_rate_with_time(
                 compound,
                 result_day_counter,
                 comp,
                 freq,
-                dt,
+                DT,
             );
         }
         let compound = 1.0 / self.discount(date, extrapolate);
@@ -157,22 +173,23 @@ impl YTS for YieldTermStructure {
     }
     ///
     fn zero_rate_with_time(
-        &self,
+        &mut self,
         time: Time,
         comp: Compounding,
         freq: Frequency,
         extrapolate: bool,
-    ) -> InterestRate {
+    ) -> InterestRate<DC> {
+        let mut t = time;
         if time == 0.0 {
-            time = dt;
+            t = DT;
         }
-        let compound = 1.0 / self.discount_with_time(dt, extrapolate);
+        let compound = 1.0 / self.discount_with_time(DT, extrapolate);
         return InterestRate::implied_rate_with_time(
             compound,
-            self.day_counter(),
+            self.base.day_counter,
             comp,
             freq,
-            time,
+            t,
         );
     }
 
@@ -181,20 +198,21 @@ impl YTS for YieldTermStructure {
     /// reference date.
     /// If both dates (times) are equal the instantaneous forward rate is returned.
     fn forward_rate(
-        &self,
+        &mut self,
         d1: Date,
         d2: Date,
-        result_day_counter: Box<dyn DayCounter>,
+        result_day_counter: DC,
         comp: Compounding,
         freq: Frequency,
         extrapolate: bool,
-    ) -> InterestRate {
+    ) -> InterestRate<DC> {
         if d1 == d2 {
-            self.base
-                .check_range(d1, self.reference_date(), self.max_date(), extrapolate);
+            let rf = self.reference_date();
+            let md = self.max_date();
+            self.base.check_range(d1, rf, md, extrapolate);
 
-            let t1 = ((self.time_from_reference(d1) - dt / 2.0) as f64).max(0.0);
-            let t2 = t1 + dt;
+            let t1 = ((self.time_from_reference(d1) - DT / 2.0) as f64).max(0.0);
+            let t2 = t1 + DT;
 
             let compound = self.discount_with_time(t1, true) / self.discount_with_time(t2, true);
             // times have been calculated with a possibly different daycounter
@@ -204,7 +222,7 @@ impl YTS for YieldTermStructure {
                 result_day_counter,
                 comp,
                 freq,
-                dt,
+                DT,
             );
         }
         assert!(d1 < d2);
@@ -213,20 +231,20 @@ impl YTS for YieldTermStructure {
     }
 
     fn forward_rate_with_time(
-        &self,
-        t1: Time,
-        t2: Time,
-        result_day_counter: Box<dyn DayCounter>,
+        &mut self,
+        mut t1: Time,
+        mut t2: Time,
+        result_day_counter: DC,
         comp: Compounding,
         freq: Frequency,
         extrapolate: bool,
-    ) -> InterestRate {
+    ) -> InterestRate<DC> {
         let compound: f64;
         if t2 == t1 {
             self.base
                 .check_range_with_time(t1, self.max_time(), extrapolate);
-            t1 = (t1 - dt / 2.0).max(0.0);
-            t2 = t1 + dt;
+            t1 = (t1 - DT / 2.0).max(0.0);
+            t2 = t1 + DT;
             compound = self.discount_with_time(t1, true) / self.discount_with_time(t2, true);
         } else {
             // QL_REQUIRE(t2 > t1, "t2 (" << t2 << ") < t1 (" << t2 << ")");
@@ -234,19 +252,19 @@ impl YTS for YieldTermStructure {
                 self.discount_with_time(t1, extrapolate) / self.discount_with_time(t2, extrapolate);
         }
 
-        InterestRate::implied_rate_with_time(compound, self.day_counter(), comp, freq, t2 - t1)
+        InterestRate::implied_rate_with_time(compound, result_day_counter, comp, freq, t2 - t1)
     }
 }
 
-impl TermStructure for YieldTermStructure {
+impl<C, Q, DC> TermStructure for YieldTermStructure<C, Q, DC>
+where
+    C: Cal,
+    Q: Quote,
+    DC: DayCounter,
+{
     /// The latest date for which the curve can return values.
     fn max_date(&self) -> Date {
         self.base.max_date()
-    }
-
-    /// The calendar used for reference date calculation.
-    fn calendar(&self) -> Calendar {
-        self.base.calendar()
     }
 
     /// The settlement days used for reference date calculation.
@@ -260,18 +278,13 @@ impl TermStructure for YieldTermStructure {
         self.base.time_from_reference(date)
     }
 
-    /// The day counter used for date/double conversion.
-    fn day_counter(&self) -> Box<dyn DayCounter> {
-        self.base.day_counter()
-    }
-
     /// The latest double for which the curve can return values.
     fn max_time(&self) -> Time {
         self.base.max_time()
     }
 
     /// The date at which discount = 1.0 and/or variance = 0.0.
-    fn reference_date(&self) -> Date {
+    fn reference_date(&mut self) -> Date {
         self.base.reference_date()
     }
 }
