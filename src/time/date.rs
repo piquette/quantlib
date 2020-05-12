@@ -14,6 +14,7 @@ impl Default for Date {
         Date { d: Utc::today() }
     }
 }
+
 const MONTH_LENGTHS: [usize; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const MONTH_LEAP_LENGTHS: [usize; 12] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const YEAR_IS_LEAP: [bool; 301] = [
@@ -52,6 +53,28 @@ const YEAR_IS_LEAP: [bool; 301] = [
     false, false, true, false, false, false, true, false, false, false, // 2200
     false,
 ];
+/// The minimum possible `Date`.
+pub const MIN_DATE: Date = Date {
+    d: chrono::MIN_DATE,
+};
+
+/// The maximum possible `Date`.
+pub const MAX_DATE: Date = Date {
+    d: chrono::MAX_DATE,
+};
+
+pub fn max(d1: Date, d2: Date) -> Date {
+    if d1 > d2 {
+        return d1;
+    }
+    d2
+}
+pub fn min(d1: Date, d2: Date) -> Date {
+    if d1 < d2 {
+        return d1;
+    }
+    d2
+}
 
 impl Date {
     pub fn new(day: u32, month: Month, year: i32) -> Date {
@@ -59,12 +82,7 @@ impl Date {
             d: Utc.ymd(year, month as u32, day),
         }
     }
-    pub fn max(&self, d: Date) -> Date {
-        if *self > d {
-            return *self;
-        }
-        d
-    }
+
     pub fn sub(&self, date: Date) -> i64 {
         self.d.signed_duration_since(date.d).num_days()
     }

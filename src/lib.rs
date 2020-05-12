@@ -7,8 +7,10 @@
 
 #[macro_use]
 pub mod cashflows;
+pub mod currencies;
 pub mod definitions;
 pub mod instruments;
+pub mod patterns;
 pub mod pricingengines;
 pub mod quotes;
 pub mod termstructures;
