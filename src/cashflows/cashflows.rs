@@ -4,7 +4,7 @@ use super::Leg;
 use crate::time::date as df;
 use crate::time::Date;
 
-pub fn start_date<CF: CashFlow>(leg: Leg<CF>) -> Date {
+pub fn start_date<CF: CashFlow>(leg: &Leg<CF>) -> Date {
     assert!(!leg.is_empty());
     //
     let mut d = df::MAX_DATE;
@@ -22,7 +22,7 @@ pub fn start_date<CF: CashFlow>(leg: Leg<CF>) -> Date {
     d
 }
 
-pub fn maturity_date<CF: CashFlow>(leg: Leg<CF>) -> Date {
+pub fn maturity_date<CF: CashFlow>(leg: &Leg<CF>) -> Date {
     assert!(!leg.is_empty());
     //
     let mut d = df::MIN_DATE;

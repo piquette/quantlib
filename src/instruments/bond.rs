@@ -1,12 +1,16 @@
 use super::base::Base;
 use super::traits::Instrument;
 use crate::cashflows::{CashFlow, Leg};
-use crate::definitions::Money;
+use crate::definitions::{Money, Rate};
 use crate::pricingengines::bondfunctions;
 use crate::pricingengines::{Arguments, PricingEngine, Results};
+use crate::termstructures::Compounding;
 use crate::time::date as df;
 use crate::time::traits::Calendar as Cal;
+use crate::time::traits::DayCounter;
 use crate::time::Calendar;
+use crate::time::Frequency;
+
 use crate::time::Date;
 use crate::time::TimeUnit;
 use std::collections::HashMap;
@@ -169,8 +173,8 @@ where
     //
     // Getters.
     //
-    pub fn face_amount(&self) -> Option<&f64> {
-        self.notionals.get(0)
+    pub fn face_amount(&self) -> f64 {
+        *self.notionals.get(0).unwrap()
     }
 
     ///
@@ -212,7 +216,7 @@ where
         // lower_bound, *i is the earliest date which is greater or
         // equal than d.  Its index is greater or equal to 1.
         let mut idx = 0;
-        for nd in &self.notional_schedule {
+        for nd in self.notional_schedule.iter() {
             if nd >= &d {
                 break;
             }
@@ -221,7 +225,8 @@ where
         assert!(idx != 0);
         if d < self.notional_schedule[idx] {
             // no doubt about what to return
-            return self.notionals[idx - 1];
+            let ret = self.notionals[idx - 1];
+            return ret;
         } else {
             // d is equal to a redemption date.
             // As per bond conventions, the payment has occurred;
@@ -231,18 +236,18 @@ where
     }
 
     ///
-    pub fn redemption(&self) -> &CF {
+    pub fn redemption(&self) -> Option<&CF> {
         assert!(self.redemptions.len() == 1);
-        self.redemptions.last().unwrap()
+        self.redemptions.last()
     }
 
     ///
-    pub fn start_date(self) -> Date {
+    pub fn start_date(&self) -> Date {
         bondfunctions::start_date(self)
     }
 
     ///
-    pub fn maturity_date(self) -> Date {
+    pub fn maturity_date(&self) -> Date {
         if self.maturity_date.is_some() {
             return self.maturity_date.unwrap();
         }
@@ -250,7 +255,7 @@ where
     }
 
     ///
-    pub fn is_tradeable(self, d: Date) -> bool {
+    pub fn is_tradeable(&self, d: Date) -> bool {
         bondfunctions::is_tradeable(self, d)
     }
 
@@ -261,12 +266,12 @@ where
     // ==============
 
     ///
-    pub fn clean_price(&self) -> f64 {
+    pub fn clean_price(&mut self) -> f64 {
         self.dirty_price() - self.accrued_amount(self.settlement_date(None))
     }
 
     ///
-    pub fn dirty_price(&self) -> f64 {
+    pub fn dirty_price(&mut self) -> f64 {
         let current_notional = self.notional(Some(self.settlement_date(None)));
         if current_notional == 0.0 {
             return 0.0;
@@ -275,18 +280,120 @@ where
     }
 
     ///
-    pub fn settlement_value(&self) -> f64 {
-        0.0
+    pub fn settlement_value(&mut self) -> f64 {
+        self.calculate();
+        self.settlement_value.unwrap()
     }
 
     ///
-    pub fn settlement_value_from_clean(&self, clean_price: f64) -> f64 {
-        0.0
+    pub fn settlement_value_from_clean(&mut self, clean_price: f64) -> f64 {
+        let dirty_price = clean_price + self.accrued_amount(self.settlement_date(None));
+        dirty_price / 100.0 * self.notional(Some(self.settlement_date(None)))
+    }
+
+    pub fn yield_with<DC: DayCounter>(
+        &mut self,
+        day_counter: DC,
+        comp: Compounding,
+        freq: Frequency,
+        accuracy: f64,
+        max_evaluations: usize,
+    ) -> f64 {
+        let current_notional = self.notional(Some(self.settlement_date(None)));
+        if current_notional == 0.0 {
+            return 0.0;
+        }
+        let clean = self.clean_price();
+        let sd = self.settlement_date(None);
+        bondfunctions::yield_with(
+            self,
+            clean,
+            day_counter,
+            comp,
+            freq,
+            sd,
+            accuracy,
+            max_evaluations,
+        )
+    }
+
+    pub fn clean_price_with<DC: DayCounter>(
+        self,
+        y: Rate,
+        day_counter: DC,
+        comp: Compounding,
+        freq: Frequency,
+        settlement: Date,
+    ) -> f64 {
+        bondfunctions::clean_price(self, y, day_counter, comp, freq, settlement)
+    }
+
+    pub fn dirty_price_with<DC: DayCounter>(
+        self,
+        y: Rate,
+        day_counter: DC,
+        comp: Compounding,
+        freq: Frequency,
+        settlement: Date,
+    ) -> f64 {
+        let current_notional = self.notional(Some(settlement));
+        if current_notional == 0.0 {
+            return 0.0;
+        }
+        let aa = self.accrued_amount(settlement);
+        let clean = bondfunctions::clean_price(self, y, day_counter, comp, freq, settlement);
+        clean + aa
+    }
+
+    pub fn yield_with_clean<DC: DayCounter>(
+        &self,
+        clean_price: f64,
+        day_counter: DC,
+        comp: Compounding,
+        freq: Frequency,
+        settlement: Date,
+        accuracy: f64,
+        max_evaluations: usize,
+    ) -> f64 {
+        let current_notional = self.notional(Some(settlement));
+        if current_notional == 0.0 {
+            return 0.0;
+        }
+        bondfunctions::yield_with(
+            self,
+            clean_price,
+            day_counter,
+            comp,
+            freq,
+            settlement,
+            accuracy,
+            max_evaluations,
+        )
     }
 
     ///
-    pub fn accrued_amount(&self, settlement: Date) -> f64 {
-        0.0
+    pub fn accrued_amount(&self, settlement_date: Date) -> f64 {
+        let current_notional = self.notional(Some(settlement_date));
+        if current_notional == 0.0 {
+            return 0.0;
+        }
+        bondfunctions::accrued_amount(self, settlement_date)
+    }
+
+    pub fn next_coupon_rate(&self, settlement_date: Date) -> Rate {
+        bondfunctions::next_coupon_rate(self, settlement_date)
+    }
+
+    pub fn previous_coupon_rate(&self, settlement_date: Date) -> Rate {
+        bondfunctions::previous_coupon_rate(self, settlement_date)
+    }
+
+    pub fn next_cashflow_date(&self, settlement_date: Date) -> Date {
+        bondfunctions::next_cashflow_date(self, settlement_date)
+    }
+
+    pub fn previous_cashflow_date(&self, settlement_date: Date) -> Date {
+        bondfunctions::previous_cashflow_date(self, settlement_date)
     }
 }
 
