@@ -14,7 +14,7 @@ impl<DC> InterestRate<DC>
 where
     DC: DayCounter,
 {
-    fn new(r: Rate, day_counter: DC, comp: Compounding, freq: Frequency) -> InterestRate<DC> {
+    pub fn new(r: Rate, day_counter: DC, comp: Compounding, freq: Frequency) -> InterestRate<DC> {
         let mut makes_sense = false;
         if comp == Compounding::Compounded
             || comp == Compounding::SimpleThenCompounded
@@ -103,7 +103,7 @@ where
         self.compound_factor_with_time(t)
     }
 
-    fn compound_factor_with_time(&self, t: Time) -> f64 {
+    pub fn compound_factor_with_time(&self, t: Time) -> f64 {
         assert!(t >= 0.0);
         match self.compounding {
             Compounding::Simple => {
