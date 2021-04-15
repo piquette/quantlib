@@ -140,4 +140,19 @@ where
             }
         }
     }
+
+    pub fn equivalent_rate_with_time(
+        &self,
+        comp: Compounding,
+        freq: Frequency,
+        t: Time,
+    ) -> InterestRate<DC> {
+        Self::implied_rate_with_time(
+            self.compound_factor_with_time(t),
+            self.day_counter,
+            comp,
+            freq,
+            t,
+        )
+    }
 }
